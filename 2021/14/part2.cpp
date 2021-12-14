@@ -69,10 +69,6 @@ int main() {
     cin >> s;
     int n = s.size();
     vector<vector<ll>> a(26, vector<ll>(26));
-    PII first;
-    PII last;
-    first = mp(s[0] - 'A', s[1] - 'A');
-    last = mp(s[n - 2] - 'A', s[n - 1] - 'A');
     REP(i, 1, n) {
         int x = s[i - 1] - 'A';
         int y = s[i] - 'A';
@@ -83,46 +79,20 @@ int main() {
     vector<char> y;
     vector<char> c;
     while (cin >> from >> z >> to) {
-        char xx = from[0];
-        char yy = from[1];
-        char cc = to[0];
-        x.pb(xx);
-        y.pb(yy);
-        c.pb(cc);
+        x.pb(from[0]);
+        y.pb(from[1]);
+        c.pb(to[0]);
     }
     int m = x.size();
     FOR(tt, 40) {
         vector<vector<ll>> b(26, vector<ll>(26));
-        FOR(i, 26) {
-            FOR(j, 26) {
-                if (a[i][j] == 0) {
-                    continue;
-                }
-                FOR(k, m) {
-                    int xx = x[k] - 'A';
-                    int yy = y[k] - 'A';
-                    int cc = c[k] - 'A';
-                    if (i == xx && j == yy) {
-                        b[xx][cc] += a[i][j];
-                        b[cc][yy] += a[i][j];
-                        if (first.first == i && first.second == j) {
-                            first.second = cc;
-                        }
-                        if (last.first == i && last.second == j) {
-                            last.first = cc;
-                        }
-                        break;
-                    }
-                }
-            }
+        FOR(k, m) {
+            int xx = x[k] - 'A';
+            int yy = y[k] - 'A';
+            int cc = c[k] - 'A';
+            b[xx][cc] += a[xx][yy];
+            b[cc][yy] += a[xx][yy];
         }
-        /*FOR(i, 26) {
-            FOR(j, 26) {
-                if (b[i][j] != 0) {
-                    cerr << (char) (i + 'A') << (char) (j + 'A') << " " << b[i][j] << "\n";
-                }
-            }
-        }*/
         swap(a, b);
         cerr << tt << "\n";
     }
@@ -130,21 +100,20 @@ int main() {
     vector<ll> cnt(26);
     FOR(i, 26) {
         FOR(j, 26) {
-            if (a[i][j] != 0) {
-                cnt[i] += a[i][j];
-                cnt[j] += a[i][j];
-            }
+            cnt[i] += a[i][j];
+            cnt[j] += a[i][j];
         }
     }
-    cnt[first.first] += 1;
-    cnt[last.second] += 1;
+    cnt[s[0] - 'A'] += 1;
+    cnt[s[n - 1] - 'A'] += 1;
     ll mx = -1;
     ll mn = (ll) 1e18;
     FOR(i, 26) {
-        mx = max(cnt[i] / 2, mx);
+        cnt[i] /= 2;
+        mx = max(cnt[i], mx);
         if (cnt[i] != 0) {
-            cerr << (char) (i + 'A') << " " << cnt[i] / 2 << "\n";
-            mn = min(cnt[i] / 2, mn);
+            cerr << (char) (i + 'A') << " " << cnt[i] << "\n";
+            mn = min(cnt[i], mn);
         }
     }
     cout << mx - mn;
