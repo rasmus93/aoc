@@ -62,43 +62,50 @@ string val[16] = {"0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111"
 
 ll res = 0;
 
-ll get(VI &a, int from, int cnt) {
+ll get(VI &a, int &from, int cnt) {
     ll res = 0;
-    ll st = 1;
-    for (int i = from + cnt - 1; i >= from; --i) {
-        res += a[i] * st;
-        st *= 2;
+    REP(i, from, from + cnt) {
+        res <<= 1;
+        res += a[i];
     }
+    from += cnt;
     return res;
 }
 
+ll get(vector<ll> &sub, const function<ll(ll, ll)> &func) {
+    ll now = sub[0];
+    REP(j, 1, sub.size()) {
+        now = func(now, sub[j]);
+    }
+    return now;
+}
+
+void get(VI &a, int &i, ll &now) {
+    ++i;
+    REP(j, i, i + 4) {
+        now <<= 1;
+        now += a[j];
+    }
+    i += 4;
+}
+
 ll go(VI &a, int &i) {
-    int packet_version = a[i] * 4 + a[i + 1] * 2 + a[i + 2] * 1;
+    int packet_version = get(a, i, 3);
     res += packet_version;
-    int type_id = a[i + 3] * 4 + a[i + 4] * 2 + a[i + 5] * 1;
-    i += 6;
+    int type_id = get(a, i, 3);
     //cout << packet_version << " " << type_id << "\n";
     if (type_id == 4) {
-        VI now;
+        ll now = 0;
         while (a[i] == 1) {
-            ++i;
-            REP(j,i,i + 4) {
-                now.pb(a[j]);
-            }
-            i += 4;
+            get(a, i, now);
         }
-        ++i;
-        REP(j,i,i + 4) {
-            now.pb(a[j]);
-        }
-        i += 4;
-        return get(now,0,now.size());
+        get(a, i, now);
+        return now;
     } else {
         vector<ll> sub;
         if (a[i] == 0) {
             ++i;
             int len = get(a, i, 15);
-            i += 15;
             int to = i + len;
             while (i < to) {
                 sub.pb(go(a, i));
@@ -106,38 +113,21 @@ ll go(VI &a, int &i) {
         } else {
             ++i;
             int cnt = get(a, i, 11);
-            i += 11;
             FOR(j, cnt) {
                 sub.pb(go(a, i));
             }
         }
         if (type_id == 0) {
-            ll now = 0;
-            FOR(j,sub.size()) {
-                now += sub[j];
-            }
-            return now;
+            return get(sub, [](ll x, ll y) -> ll { return x + y; });
         }
         if (type_id == 1) {
-            ll now = sub[0];
-            REP(j,1,sub.size()) {
-                now *= sub[j];
-            }
-            return now;
+            return get(sub, [](ll x, ll y) -> ll { return x * y; });
         }
         if (type_id == 2) {
-            ll now = sub[0];
-            REP(j,1,sub.size()) {
-                now = min(now, sub[j]);
-            }
-            return now;
+            return get(sub, [](ll x, ll y) -> ll { return min(x, y); });
         }
         if (type_id == 3) {
-            ll now = sub[0];
-            REP(j,1,sub.size()) {
-                now = max(now, sub[j]);
-            }
-            return now;
+            return get(sub, [](ll x, ll y) -> ll { return max(x, y); });
         }
         if (type_id == 5) {
             return sub[0] > sub[1] ? 1 : 0;
@@ -160,7 +150,7 @@ int main() {
     std::cout.tie(0);
     string s;
     cin >> s;
-    string z = "";
+    VI a;
     FOR(i, s.size()) {
         char c = s[i];
         int v;
@@ -169,12 +159,9 @@ int main() {
         } else {
             v = c - 'A' + 10;
         }
-        z += val[v];
-    }
-    int n = z.size();
-    VI a(n);
-    FOR(i, n) {
-        a[i] = z[i] - '0';
+        FOR(i, val[v].size()) {
+            a.pb(val[v][i] - '0');
+        }
     }
     int i = 0;
     cout << go(a, i) << " " << res;
