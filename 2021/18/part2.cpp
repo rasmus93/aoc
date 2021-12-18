@@ -63,33 +63,32 @@ struct pt {
     pt *par = nullptr;
     ll val = -1;
 
-    pt(int v) {
-        val = v;
-        left = nullptr;
-        right = nullptr;
-        par = nullptr;
+    pt(int val, pt *par = nullptr) {
+        this->val = val;
+        this->par = par;
+    }
+
+    pt(pt *left, pt *right) {
+        val = -1;
+        this->left = left;
+        this->right = right;
+        this->left->par = this;
+        this->right->par = this;
     }
 };
 
 pt *parse(string &s) {
     vector<pt *> values;
     FOR(i, s.size()) {
-        if (s[i] == ',') {
-            continue;
-        }
-        if (s[i] == '[') {
+        if (s[i] == ',' || s[i] == '[') {
             continue;
         }
         if (s[i] == ']') {
-            pt *y = values.back();
+            pt *right = values.back();
             values.pop_back();
-            pt *x = values.back();
+            pt *left = values.back();
             values.pop_back();
-            pt *now = new pt(-1);
-            now->left = x;
-            now->right = y;
-            now->left->par = now;
-            now->right->par = now;
+            pt *now = new pt(left, right);
             values.pb(now);
             continue;
         }
@@ -99,13 +98,14 @@ pt *parse(string &s) {
     return values[0];
 }
 
-vector<pair<pt*,int>> g;
+vector<pair<pt *, int>> g;
+
 void go(pt *v, int lvl = 0) {
     if (v->left == nullptr) {
-        g.pb(mp(v,lvl));
+        g.pb(mp(v, lvl));
         return;
     }
-    go(v->left,lvl + 1);
+    go(v->left, lvl + 1);
     go(v->right, lvl + 1);
 }
 
@@ -142,24 +142,15 @@ int main() {
         s.pb(v);
     }
     int n = s.size();
-
     ll res = 0;
     FOR(x, n) {
-        FOR(y,n) {
-            pt *tree_left = parse(s[x]);
-            pt *tree_right = parse(s[y]);
-            pt *tree = new pt(-1);
-            tree->left = tree_left;
-            tree->right = tree_right;
-            tree->left->par = tree;
-            tree->right->par = tree;
+        FOR(y, n) {
+            pt *tree = new pt(parse(s[x]), parse(s[y]));
             bool found = true;
             while (found) {
                 found = false;
                 g.clear();
                 go(tree);
-                /*print(tree);
-                cout << "\n";*/
                 FOR(i, g.size()) {
                     if (g[i].second >= 5 && g[i].first->left == nullptr) {
                         int j = i - 1;
@@ -194,29 +185,16 @@ int main() {
                 FOR(i, g.size()) {
                     if (g[i].first->val >= 10) {
                         pt *cur = g[i].first;
-                        pt *left = new pt(cur->val / 2);
-                        pt *right = new pt((cur->val + 1) / 2);
-                        cur->left = left;
-                        cur->right = right;
-                        left->par = cur;
-                        right->par = cur;
+                        cur->left = new pt(cur->val / 2, cur);
+                        cur->right = new pt((cur->val + 1) / 2, cur);
                         found = true;
                         break;
                     }
                 }
             }
-            res = max(res,sum(tree));
-            /*cout << "----\n";
-            print(tree);
-            cout << "\n";
-            cout.flush();*/
+            res = max(res, sum(tree));
         }
     }
-    /*g.clear();
-    go(tree);
-    FOR(i,g.size()) {
-        cout << g[i].first->val << " ";
-    }*/
     cout << res;
     return 0;
 }
