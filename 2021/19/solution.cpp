@@ -48,7 +48,7 @@ vector<string> scan_strings(stringstream &ss, char delim) {
     return res;
 }
 
-vector<ll> scan_ints(stringstream &ss, char delim) {
+vector<ll> scan_longs(stringstream &ss, char delim) {
     string v;
     vector<ll> res;
     while (getline(ss, v, delim)) {
@@ -57,58 +57,73 @@ vector<ll> scan_ints(stringstream &ss, char delim) {
     return res;
 }
 
-struct pt {
-    int x;
-    int y;
-    int z;
-
-    pt(int x, int y, int z) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
+VI scan_ints(stringstream &ss, char delim) {
+    string v;
+    VI res;
+    while (getline(ss, v, delim)) {
+        res.pb(atoi(v.c_str()));
     }
-};
-
+    return res;
+}
 
 vector<VPII> precalc() {
-    int dx[2] = {-1, 1};
     VI perm(3);
     FOR(k, 3) {
         perm[k] = k;
     }
     vector<VPII> perms;
     do {
-
-        FOR(i, 2) {
-            FOR(j, 2) {
-                FOR(k, 2) {
-                    VPII now(3);
-                    FOR(l, 3) {
-                        int v;
-                        if (l == 0) {
-                            v = dx[i];
-                        }
-                        if (l == 1) {
-                            v = dx[j];
-                        }
-                        if (l == 2) {
-                            v = dx[k];
-                        }
-                        now[l] = mp(perm[l], v);
-                    }
-                    perms.pb(now);
-                }
+        FOR(i, 8) {
+            VPII now(3);
+            int dj = i;
+            FOR(j, 3) {
+                now[j] = mp(perm[j], (dj & 1) ? 1 : -1);
+                dj >>= 1;
             }
+            perms.pb(now);
         }
     } while (next_permutation(perm.begin(), perm.end()));
-
-    /*FOR(i,perms.size()) {
-        FOR(j,perms[i].size()) {
-            cout << perms[i][j].first << "(" << perms[i][j].second << "), ";
-        }
-        cout << "\n";
-    }*/
     return perms;
+}
+
+VVI get_now(vector<VVI> &scanners, int index) {
+    int n = scanners[index].size();
+    VVI now(n, VI(3));
+    FOR(k, n) {
+        FOR(l, 3) {
+            now[k][l] = scanners[index][k][l];
+        }
+    }
+    return now;
+}
+
+VVI get_beacons(vector<VVI> &scanners, VPII &perms, VI &diffs, int index) {
+    int n = scanners[index].size();
+    VVI now = get_now(scanners, index);
+    VVI result(n, VI(3));
+    FOR(j, n) {
+        FOR(k, 3) {
+            result[j][k] = now[j][perms[k].first] * perms[k].second - diffs[k];
+        }
+    }
+    return result;
+}
+
+int get_equal_beacons(VVI &x, VVI &y, VI &diff) {
+    int eq = 0;
+    FOR(k1, x.size()) {
+        FOR(l1, y.size()) {
+            int cnt = 0;
+            FOR(m, 3) {
+                cnt += y[l1][m] - x[k1][m] == diff[m] ? 1 : 0;
+            }
+            if (cnt == 3) {
+                ++eq;
+                break;
+            }
+        }
+    }
+    return eq;
 }
 
 int main() {
@@ -118,11 +133,10 @@ int main() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(0);
     std::cout.tie(0);
-    vector<VPII> perms = precalc();
 
     string s;
-    vector<vector<pt>> scanners;
-    vector<pt> now;
+    vector<VVI> scanners;
+    VVI now;
     while (cin >> s) {
         if (s == "---") {
             cin >> s >> s >> s;
@@ -133,8 +147,8 @@ int main() {
             continue;
         }
         stringstream ss(s);
-        vector<ll> values = scan_ints(ss, ',');
-        now.pb(pt(values[0], values[1], values[2]));
+        VI values = scan_ints(ss, ',');
+        now.pb(values);
     }
     scanners.pb(now);
     now.clear();
@@ -144,10 +158,11 @@ int main() {
     VB used(n);
     VVI diffs(n);
     VI perm_index(n);
+    vector<VPII> perms = precalc();
 
     used[0] = true;
     q.push(0);
-    VI st(3,0);
+    VI st(3, 0);
     diffs[0] = st;
     perm_index[0] = 7;
 
@@ -156,45 +171,20 @@ int main() {
         int i = q.front();
         cerr << i << "\n";
         q.pop();
+        VVI x = get_beacons(scanners, perms[perm_index[i]], diffs[i], i);
         int szx = scanners[i].size();
-        VVI now(szx, VI(3));
-        FOR(k, szx) {
-            now[k][0] = scanners[i][k].x;
-            now[k][1] = scanners[i][k].y;
-            now[k][2] = scanners[i][k].z;
-        }
-        VVI x(szx, VI(3));
-        FOR(k, szx) {
-            FOR(l, 3) {
-                x[k][l] = now[k][perms[perm_index[i]][l].first] * perms[perm_index[i]][l].second
-                        - diffs[i][l];
-                //x[k][l] = now[k][perms[perm_index[i]][l].first] * perms[perm_index[i]][l].second;
-                //x[k][l] = now[k][l];
-            }
-        }
 
-        REP(j,0,n) {
+        FOR(j, n) {
             if (used[j]) {
                 continue;
             }
             int szy = scanners[j].size();
-            VVI now(szy, VI(3));
-            FOR(k, szy) {
-                now[k][0] = scanners[j][k].x;
-                now[k][1] = scanners[j][k].y;
-                now[k][2] = scanners[j][k].z;
-            }
+            VVI now = get_now(scanners, j);
             VVI y(szy, VI(3));
-            FOR(k, szy) {
-                FOR(l, 3) {
-                    y[k][l] = now[k][perms[perm_index[i]][l].first] * perms[perm_index[i]][l].second
-                              - diffs[i][l];
-                }
-            }
 
             VI res_diff(3);
-            int res_perm = 0;
-            bool found = false;
+            VI now_diff(3);
+            int found_perm_index = -1;
             FOR(p, perms.size()) {
                 FOR(k, szy) {
                     FOR(l, 3) {
@@ -204,84 +194,51 @@ int main() {
 
                 FOR(k, szx) {
                     FOR(l, szy) {
-                        VI diff(3);
                         FOR(m, 3) {
-                            diff[m] = y[l][m] - x[k][m];
+                            now_diff[m] = y[l][m] - x[k][m];
                         }
-                        int eq = 0;
-                        FOR(k1, szx) {
-                            FOR(l1, szy) {
-                                int cnt = 0;
-                                FOR(m, 3) {
-                                    cnt += y[l1][m] - x[k1][m] == diff[m] ? 1 : 0;
-                                }
-                                if (cnt == 3) {
-                                    ++eq;
-                                    break;
-                                }
+
+                        if (get_equal_beacons(x, y, now_diff) >= 12) {
+                            FOR(xz, 3) {
+                                res_diff[xz] = now_diff[xz];
                             }
-                        }
-                        if (eq >= 12) {
-                            FOR(xz,3) {
-                                res_diff[xz] = diff[xz];// * perms[p][xz].second;
-                            }
-                            res_perm = p;
-                            found = true;
+                            found_perm_index = p;
                             break;
                         }
                     }
-                    if (found) {
+                    if (found_perm_index != -1) {
                         break;
                     }
                 }
-                if (found) {
+                if (found_perm_index != -1) {
                     break;
                 }
             }
 
-            if (found) {
+            if (found_perm_index != -1) {
                 diffs[j] = res_diff;
-                perm_index[j] = res_perm;
+                perm_index[j] = found_perm_index;
                 used[j] = true;
                 q.push(j);
             }
         }
     }
 
-    vector<pair<int,PII>> beacons;
-    FOR(i,n) {
-        //cout << i << "----\n";
-        int szx = scanners[i].size();
-        VVI now(szx, VI(3));
-        FOR(k, szx) {
-            now[k][0] = scanners[i][k].x;
-            now[k][1] = scanners[i][k].y;
-            now[k][2] = scanners[i][k].z;
-        }
-        VVI x(szx, VI(3));
-        FOR(k, szx) {
-            FOR(l, 3) {
-                x[k][l] = now[k][perms[perm_index[i]][l].first] * perms[perm_index[i]][l].second
-                          - diffs[i][l];
-                //cout << x[k][l] << ",";
-            }
-            //cout << "\n";
-            beacons.pb(mp(x[k][0],mp(x[k][1],x[k][2])));
+    vector<pair<int, PII>> beacons;
+    FOR(i, n) {
+        VVI x = get_beacons(scanners, perms[perm_index[i]], diffs[i], i);
+        FOR(j, x.size()) {
+            beacons.pb(mp(x[j][0], mp(x[j][1], x[j][2])));
         }
 
     }
     sort(beacons.begin(), beacons.end());
     beacons.erase(unique(beacons.begin(), beacons.end()), beacons.end());
-    /*FOR(i,beacons.size()) {
-        cout << beacons[i].first << ","
-        << beacons[i].second.first << ","
-        << beacons[i].second.second <<"\n";
-    }*/
-    int dist = 0 ;
-    FOR(i,n) {
-        REP(j,i+1,n) {
+    int dist = 0;
+    FOR(i, n) {
+        REP(j, i + 1, n) {
             int now = 0;
-            FOR(k,3) {
+            FOR(k, 3) {
                 now += abs(diffs[i][k] - diffs[j][k]);
             }
             dist = max(dist, now);
