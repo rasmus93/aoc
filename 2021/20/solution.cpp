@@ -66,11 +66,10 @@ VI scan_ints(stringstream &ss, char delim) {
     return res;
 }
 
-const int N = 1000;
+const int N = 500;
 int a[N + 5][N + 5];
 int b[N + 5][N + 5];
 
-//116305
 int main() {
     // g++ main.cpp -std=c++17 -pthread -O3 -o Solution
     freopen("input.txt", "r", stdin);
@@ -81,7 +80,6 @@ int main() {
     string s;
     cin >> s;
     string z;
-
     int cnt = N / 2;
     while (cin >> z) {
         FOR(i, z.size()) {
@@ -90,7 +88,8 @@ int main() {
         ++cnt;
     }
 
-    FOR(tt, 50) {
+    int times = 50;
+    FOR(tt, times) {
         REP(i, 1 + tt, N - tt) {
             REPE(j, 1 + tt , N - tt) {
                 int res = 0;
@@ -100,36 +99,19 @@ int main() {
                         res += a[i + x][j + y];
                     }
                 }
-                /*if (res != 0) {
-                    cout << res << "\n";
-                }*/
                 b[i][j] = s[res] == '#' ? 1 : 0;
             }
         }
         swap(a, b);
-        /*REP(i, 1, N) {
-            REPE(j, 1, N) {
-                cout << (a[i][j] == 1 ? "#" : ".");
-            }
-            cout << "\n";
-        }
-        cout << "\n\n\n";*/
         cerr << tt << "\n";
     }
 
     int res = 0;
-    REP(i, 2 + 50, N - 1 - 50) {
-        REPE(j, 2 + 50, N - 1 - 50) {
+    REP(i, 1 + times, N - times) {
+        REPE(j, 1 + times, N - times) {
             res += a[i][j];
         }
     }
-    REP(i, 1, N) {
-            REPE(j, 1, N) {
-                cout << (a[i][j] == 1 ? "#" : ".");
-            }
-            cout << "\n";
-        }
-        cout << "\n\n\n";
     cout << res;
     return 0;
 }
