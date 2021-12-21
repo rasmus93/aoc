@@ -78,56 +78,28 @@ void pre() {
     }
 }
 
-map<pair<pair<PII, PII>, int>, VI> m;
+map<pair<VPII, int>, VI> m;
 
-VI go(pair<PII, PII> v, int who) {
-    auto vv = mp(v,who);
-    if (m.count(vv)) {
-        cout << v.first.first << " " << v.second.first << " "
-             << v.first.second << " " << v.second.second << "\n";
-        cout << m[vv][0] << " " << m[vv][1] << "\n";
-        return m[vv];
+VI go(VPII a, int who) {
+    auto key = mp(a, who);
+    if (m.count(key)) {
+        return m[key];
     }
     VI now(2);
-    
-    if (who == 0) {
-        FOR(i, add.size()) {
-            int was = v.first.first;
-            v.first.first += add[i];
-            while (v.first.first > 10) {
-                v.first.first -= 10;
-            }
-            v.first.second += v.first.first;
-            if (v.first.second >= 21) {
-                ++now[0];
-            } else {
-                VI next = go(v, 1);
-                now[0] += next[0];
-                now[1] += next[1];
-            }
-            v.first.second -= v.first.first;
-            v.first.first = was;
-        }
-    } else {
-        FOR(i, add.size()) {
-            int was = v.second.first;
-            v.second.first += add[i];
-            while (v.second.first > 10) {
-                v.second.first -= 10;
-            }
-            v.second.second += v.second.first;
-            if (v.second.second >= 21) {
-                ++now[1];
-            } else {
-                VI next = go(v, 0);
-                now[0] += next[0];
-                now[1] += next[1];
-            }
-            v.second.second -= v.second.first;
-            v.second.first = was;
+    FOR(i, add.size()) {
+        VPII b = a;
+        b[who].first += add[i];
+        b[who].first = (b[who].first - 1) % 10 + 1;
+        b[who].second += b[who].first;
+        if (b[who].second >= 21) {
+            ++now[who];
+        } else {
+            VI next = go(b, 1 - who);
+            now[0] += next[0];
+            now[1] += next[1];
         }
     }
-    m[vv] = now;
+    m[key] = now;
     return now;
 }
 
@@ -144,7 +116,11 @@ int main() {
     /*a[0] = 7;
     a[1] = 6;*/
     pre();
-    VI res = go(mp(mp(a[0], 0), mp(a[1], 0)), 0);
+    VPII b(2);
+    FOR(i, 2) {
+        b[i] = mp(a[i], 0);
+    }
+    VI res = go(b, 0);
     cout << res[0] << " " << res[1] << "\n";
     return 0;
 }
