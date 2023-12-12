@@ -74,8 +74,8 @@ bool pred(const pair<string, ll> &i, const pair<string, ll> &j) {
 // . - 0
 ll solve(string s, vector<ll> a) {
     int m = a.size();
-    s = "?" + s;
     string ss = s;
+    s = "?" + s;
     FOR(i, 4) {
         FOR(j, m) {
             a.pb(a[j]);
